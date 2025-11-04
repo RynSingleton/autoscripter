@@ -1,0 +1,6 @@
+#requirements for dev
+
+-r requirements.txt
+pytest>=7.4.0
+pylint>=3.0.0
+black>=23.0.0

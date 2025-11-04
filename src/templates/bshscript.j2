@@ -1,0 +1,62 @@
+#!/bin/bash
+
+{% if error_handling %}
+set -e
+error_exit() {
+    echo "Error: $1" >&2
+    exit 1
+}
+{% endif %}
+
+{% for operation in operations %}
+{% set params = operation_params[operation] %}
+{% if operation == 'mkdir' %}
+{% if error_handling %}
+mkdir {% if params.parents %}-p {% endif %}{{ params.path }} || error_exit "Failed to create directory {{ params.path }}"
+{% else %}
+mkdir {% if params.parents %}-p {% endif %}{{ params.path }}
+{% endif %}
+echo "Created directory: {{ params.path }}"
+
+{% elif operation == 'touch' %}
+{% if error_handling %}
+touch {{ params.path }} || error_exit "Failed to touch file {{ params.path }}"
+{% else %}
+touch {{ params.path }}
+{% endif %}
+echo "Created/updated file: {{ params.path }}"
+
+{% elif operation == 'ls' %}
+{% if error_handling %}
+ls {% if params.recursive %}-R {% endif %}{{ params.path }} || error_exit "Failed to list directory {{ params.path }}"
+{% else %}
+ls {% if params.recursive %}-R {% endif %}{{ params.path }}
+{% endif %}
+
+{% elif operation == 'cd' %}
+{% if error_handling %}
+cd {{ params.path }} || error_exit "Failed to change directory to {{ params.path }}"
+{% else %}
+cd {{ params.path }}
+{% endif %}
+echo "Changed directory to: {{ params.path }}"
+echo "Current directory: $(pwd)"
+
+{% elif operation == 'rm' %}
+{% if error_handling %}
+rm {% if params.recursive %}-r {% endif %}{% if params.force %}-f {% endif %}{{ params.path }} || error_exit "Failed to remove {{ params.path }}"
+{% else %}
+rm {% if params.recursive %}-r {% endif %}{% if params.force %}-f {% endif %}{{ params.path }}
+{% endif %}
+echo "Removed: {{ params.path }}"
+
+{% elif operation == 'mv' %}
+{% if error_handling %}
+mv {{ params.source }} {{ params.destination }} || error_exit "Failed to move {{ params.source }} to {{ params.destination }}"
+{% else %}
+mv {{ params.source }} {{ params.destination }}
+{% endif %}
+echo "Moved {{ params.source }} to {{ params.destination }}"
+
+{% endif %}
+{% endfor %}

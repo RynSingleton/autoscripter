@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+def main():
+    
+{% for operation in operations %}
+{% set params = operation_params[operation] %}
+    # {{ operation | upper }} operation
+{% if operation == 'mkdir' %}
+    mkdir_operation({{ params.path | repr }}, parents={{ params.parents }})
+{% elif operation == 'touch' %}
+    touch_operation({{ params.path | repr }})
+{% elif operation == 'ls' %}
+    ls_operation({{ params.path | repr }}, recursive={{ params.recursive }})
+{% elif operation == 'cd' %}
+    cd_operation({{ params.path | repr }})
+{% elif operation == 'rm' %}
+    rm_operation({{ params.path | repr }}, recursive={{ params.recursive }}, force={{ params.force }})
+{% elif operation == 'mv' %}
+    mv_operation({{ params.source | repr }}, {{ params.destination | repr }})
+{% endif %}
+    
+{% endfor %}
+
+{% for operation in operations %}
+{% if operation == 'mkdir' %}
+def mkdir_operation(path, parents=True):
+{% if error_handling %}
+    try:
+        os.makedirs(path, exist_ok=parents)
+        print(f"Created directory: {path}")
+    except OSError as e:
+        print(f"Error creating directory {path}: {e}", file=sys.stderr)
+        sys.exit(1)
+{% else %}
+    os.makedirs(path, exist_ok=parents)
+    print(f"Created directory: {path}")
+{% endif %}
+
+
+{% elif operation == 'touch' %}
+def touch_operation(path):
+{% if error_handling %}
+    try:
+        Path(path).touch()
+        print(f"Created/updated file: {path}")
+    except OSError as e:
+        print(f"Error touching file {path}: {e}", file=sys.stderr)
+        sys.exit(1)
+{% else %}
+    Path(path).touch()
+    print(f"Created/updated file: {path}")
+{% endif %}
+
+
+{% elif operation == 'ls' %}
+def ls_operation(path, recursive=False):
+{% if error_handling %}
+    try:
+        if recursive:
+            for root, dirs, files in os.walk(path):
+                level = root.replace(path, '').count(os.sep)
+                indent = ' ' * 2 * level
+                print(f"{indent}{os.path.basename(root)}/")
+                subindent = ' ' * 2 * (level + 1)
+                for file in files:
+                    print(f"{subindent}{file}")
+        else:
+            for item in os.listdir(path):
+                print(item)
+    except OSError as e:
+        print(f"Error listing directory {path}: {e}", file=sys.stderr)
+        sys.exit(1)
+{% else %}
+    if recursive:
+        for root, dirs, files in os.walk(path):
+            level = root.replace(path, '').count(os.sep)
+            indent = ' ' * 2 * level
+            print(f"{indent}{os.path.basename(root)}/")
+            subindent = ' ' * 2 * (level + 1)
+            for file in files:
+                print(f"{subindent}{file}")
+    else:
+        for item in os.listdir(path):
+            print(item)
+{% endif %}
+
+
+{% elif operation == 'cd' %}
+def cd_operation(path):
+{% if error_handling %}
+    try:
+        os.chdir(path)
+        print(f"Changed directory to: {path}")
+        print(f"Current directory: {os.getcwd()}")
+    except OSError as e:
+        print(f"Error changing directory to {path}: {e}", file=sys.stderr)
+        sys.exit(1)
+{% else %}
+    os.chdir(path)
+    print(f"Changed directory to: {path}")
+    print(f"Current directory: {os.getcwd()}")
+{% endif %}
+
+
+{% elif operation == 'rm' %}
+def rm_operation(path, recursive=False, force=False):
+{% if error_handling %}
+    try:
+        if os.path.isfile(path):
+            os.remove(path)
+            print(f"Removed file: {path}")
+        elif os.path.isdir(path):
+            if recursive:
+                import shutil
+                shutil.rmtree(path)
+                print(f"Removed directory recursively: {path}")
+            else:
+                os.rmdir(path)
+                print(f"Removed directory: {path}")
+        else:
+            print(f"Path not found: {path}", file=sys.stderr)
+            if not force:
+                sys.exit(1)
+    except OSError as e:
+        print(f"Error removing {path}: {e}", file=sys.stderr)
+        if not force:
+            sys.exit(1)
+{% else %}
+    if os.path.isfile(path):
+        os.remove(path)
+        print(f"Removed file: {path}")
+    elif os.path.isdir(path):
+        if recursive:
+            import shutil
+            shutil.rmtree(path)
+            print(f"Removed directory recursively: {path}")
+        else:
+            os.rmdir(path)
+            print(f"Removed directory: {path}")
+{% endif %}
+
+
+{% elif operation == 'mv' %}
+def mv_operation(source, destination):
+{% if error_handling %}
+    try:
+        import shutil
+        shutil.move(source, destination)
+        print(f"Moved {source} to {destination}")
+    except OSError as e:
+        print(f"Error moving {source} to {destination}: {e}", file=sys.stderr)
+        sys.exit(1)
+{% else %}
+    import shutil
+    shutil.move(source, destination)
+    print(f"Moved {source} to {destination}")
+{% endif %}
+
+
+{% endif %}
+
+{% endfor %}
+
+if __name__ == "__main__":
+    main()

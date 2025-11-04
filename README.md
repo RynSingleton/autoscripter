@@ -10,7 +10,7 @@ Adding network commands (ssh, curl) soon!
 
 Simply download the package and run it with
 
-> (your python binary here) autoscripter.py
+``` (your python binary here) autoscripter.py
 
 The program will prompt you through creating your
 scripts!

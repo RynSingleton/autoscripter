@@ -4,8 +4,6 @@ A basic shell script writer for python and bash.
 
 Currently supports common linux shell commands (mkdir, touch, ls, cd, rm, mv).
 
-Adding network commands (ssh, curl) soon!
-
 ## Install
 
 Clone the repo and set up dependencies:
@@ -70,6 +68,11 @@ Uses click for CLI and jinja2 for templating.
 make clean    # clean cache and output
 make help     # show all commands
 ```
+
+---
+### Next Steps
+
+Adding network commands (ssh, curl) soon!
 
 ## License
 
